@@ -1,1 +1,3 @@
 # Smart-Parking-System
+
+This project proposes the development of a smart parking system based on Internet of Things (IoT) technologies to address the growing demand for efficient and automated vehicle parking management. The system is designed to detect vehicle entry and exit using ESP32 microcontrollers with sensors, while Raspberry Pi and ESP32-CAM modules are deployed for license plate recognition and real-time monitoring of parking space availability. Furthermore, a mobile app interface will be simulated using Figma to enhance user interaction and system visualization. The solution aims to improve traffic flow, reduce human intervention, and provide a seamless parking experience. 
