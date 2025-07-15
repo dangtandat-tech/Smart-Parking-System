@@ -1,2 +1,2 @@
 # ESP32 Code
-Source code cho điều khiển ESP32.
+Source code phần ESP32_Sensor
