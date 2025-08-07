@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+
+  <title>FLAWLESS - Đăng ký / Đăng nhập</title>
+
+  <!-- bootstrap core css -->
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+
+  <!-- fonts style -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway:400,700|Roboto:400,700&display=swap" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/style.css" rel="stylesheet" />
+  <!-- responsive style -->
+  <link href="css/responsive.css" rel="stylesheet" />
+
+  <!-- Custom login styles -->
+  <style>
+    /* Override body padding for login page */
+    body {
+      padding-top: 0 !important; /* Xóa padding-top cho trang login */
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    .auth_section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 50px 0;
+      position: relative;
+    }
+
+    .auth-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .auth-toggle {
+      display: flex;
+      background: #f8f9fa;
+      border-radius: 15px 15px 0 0;
+    }
+
+    .auth-toggle button {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      font-size: 16px;
+      color: #666;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .auth-toggle button.active {
+      background: #007bff;
+      color: white;
+      border-radius: 15px 15px 0 0;
+    }
+
+    .auth-form {
+      padding: 40px;
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-control {
+      height: 50px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .btn-auth {
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      color: white;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .btn-auth:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+    }
+
+    .auth-link {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+    }
+
+    .auth-link a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .auth-link a:hover {
+      text-decoration: underline;
+    }
+
+    .social-login {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .social-login .divider {
+      margin: 20px 0;
+      position: relative;
+      text-align: center;
+      color: #666;
+    }
+
+    .social-login .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #ddd;
+      z-index: 1;
+    }
+
+    .social-login .divider span {
+      background: white;
+      padding: 0 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .social-btn {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      margin: 0 10px;
+      border-radius: 50%;
+      line-height: 50px;
+      text-align: center;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .social-btn.facebook { background: #3b5998; }
+    .social-btn.google { background: #dd4b39; }
+    .social-btn.twitter { background: #1da1f2; }
+
+    .social-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      color: white;
+      text-decoration: none;
+    }
+
+    .back-to-home {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
+
+    .back-to-home a {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #007bff;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .back-to-home a:hover {
+      background: white;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      text-decoration: none;
+    }
+
+    .feature-highlight {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .feature-highlight h6 {
+      color: #007bff;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .feature-highlight ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .feature-highlight ul li {
+      padding: 5px 0;
+      color: #666;
+    }
+
+    .feature-highlight ul li::before {
+      content: "✓";
+      color: #28a745;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .auth_section {
+        padding: 20px 0;
+      }
+      
+      .auth-form {
+        padding: 20px;
+      }
+      
+      .auth-container {
+        margin: 0 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Back to home button -->
+  <div class="back-to-home">
+    <a href="dashboard.html">
+      ← Về trang chủ
+    </a>
+  </div>
+
+  <!-- Auth section -->
+  <section class="auth_section">
+    <div class="container">
+      <div class="auth-container">
+        <!-- Toggle buttons -->
+        <div class="auth-toggle">
+          <button type="button" class="toggle-btn active" data-target="login">
+            Đăng nhập
+          </button>
+          <button type="button" class="toggle-btn" data-target="register">
+            Đăng ký
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login" class="auth-form active">
+          <div class="row">
+            <div class="col-lg-6">
+              <h2 class="mb-4">Chào mừng trở lại!</h2>
+              <p class="text-muted mb-4">Đăng nhập để tiếp tục sử dụng dịch vụ đặt chỗ đỗ xe thông minh</p>
+              
+              <form id="loginForm" method="POST">
+                <div class="form-group">
+                  <label for="loginEmail">Email</label>
+                  <input type="email" class="form-control" id="loginEmail" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="loginPassword">Mật khẩu</label>
+                  <input type="password" class="form-control" id="loginPassword" name="password" required>
+                </div>
+                
+                <div class="form-check mb-3">
+                  <input type="checkbox" class="form-check-input" id="rememberMe">
+                  <label class="form-check-label" for="rememberMe">
+                    Ghi nhớ đăng nhập
+                  </label>
+                </div>
+                
+                <button type="submit" class="btn-auth">
+                  Đăng nhập
+                </button>
+              </form>
+
+              <div class="auth-link">
+                <a href="#" onclick="showForgotPassword()">Quên mật khẩu?</a>
+              </div>
+
+              <div class="social-login">
+                <div class="divider">
+                  <span>Hoặc đăng nhập bằng</span>
+                </div>
+                <a href="#" class="social-btn facebook">f</a>
+                <a href="#" class="social-btn google">G</a>
+                <a href="#" class="social-btn twitter">t</a>
+              </div>
+            </div>
+            
+            <div class="col-lg-6">
+              <div class="feature-highlight">
+                <h6>Lợi ích khi đăng nhập:</h6>
+                <ul>
+                  <li>Đặt chỗ đỗ xe trực tuyến</li>
+                  <li>Xem lịch sử đặt chỗ</li>
+                  <li>Nhận thông báo tình trạng bãi đỗ</li>
+                  <li>Ưu đãi dành riêng cho thành viên</li>
+                  <li>Hỗ trợ khách hàng 24/7</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register" class="auth-form">
+          <div class="row">
+            <div class="col-lg-6">
+              <h2 class="mb-4">Tạo tài khoản mới</h2>
+              <p class="text-muted mb-4">Đăng ký để trải nghiệm dịch vụ đỗ xe thông minh tốt nhất</p>
+              
+              <form action="#" method="POST">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="firstName">Họ</label>
+                      <input type="text" class="form-control" id="firstName" name="first_name" placeholder="Họ" required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="lastName">Tên</label>
+                      <input type="text" class="form-control" id="lastName" name="last_name" placeholder="Tên" required>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="registerEmail">Email</label>
+                  <input type="email" class="form-control" id="registerEmail" name="email" placeholder="Nhập email của bạn" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="phone">Số điện thoại</label>
+                  <input type="tel" class="form-control" id="phone" name="phone" placeholder="Nhập số điện thoại" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="registerPassword">Mật khẩu</label>
+                  <input type="password" class="form-control" id="registerPassword" name="password" placeholder="Tạo mật khẩu" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="confirmPassword">Xác nhận mật khẩu</label>
+                  <input type="password" class="form-control" id="confirmPassword" name="confirm_password" placeholder="Nhập lại mật khẩu" required>
+                </div>
+                
+                <div class="form-check mb-3">
+                  <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                  <label class="form-check-label" for="agreeTerms">
+                    Tôi đồng ý với <a href="#">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a>
+                  </label>
+                </div>
+                
+                <button type="submit" class="btn-auth">
+                  Đăng ký
+                </button>
+              </form>
+            </div>
+            
+            <div class="col-lg-6">
+              <div class="feature-highlight">
+                <h6>Tại sao chọn FLAWLESS?</h6>
+                <ul>
+                  <li>Hệ thống đặt chỗ thông minh</li>
+                  <li>Thanh toán trực tuyến an toàn</li>
+                  <li>Vị trí thuận tiện trung tâm</li>
+                  <li>Giá cả cạnh tranh</li>
+                  <li>Bảo mật xe 24/7</li>
+                  <li>Ứng dụng mobile tiện lợi</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.js"></script>
+
+  <script>
+    // Toggle between login and register forms
+    document.querySelectorAll('.toggle-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const target = this.getAttribute('data-target');
+        
+        // Remove active class from all buttons and forms
+        document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+        
+        // Add active class to clicked button and target form
+        this.classList.add('active');
+        document.getElementById(target).classList.add('active');
+      });
+    });
+
+    // Form validation
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const formType = this.closest('.auth-form').id;
+        
+        if (formType === 'register') {
+          const password = formData.get('password');
+          const confirmPassword = formData.get('confirm_password');
+          
+          if (password !== confirmPassword) {
+            alert('Mật khẩu xác nhận không khớp!');
+            return;
+          }
+        }
+        
+        // Here you would typically send the data to your server
+        console.log('Form submitted:', Object.fromEntries(formData));
+        
+        // Simulate successful login/registration
+        if (formType === 'login') {
+          // Store user session (in real app, use proper authentication)
+          localStorage.setItem('user_session', JSON.stringify({
+            id: 1,
+            name: 'Nguyễn Văn A',
+            email: formData.get('email'),
+            loginTime: new Date().toISOString()
+          }));
+          
+          // Redirect to user dashboard
+          window.location.href = 'user_dashboard.html';
+        } else {
+          // Registration successful
+          alert('Đăng ký thành công! Vui lòng đăng nhập.');
+          // Switch to login form
+          document.querySelector('[data-target="login"]').click();
+        }
+      });
+    });
+
+    // Show forgot password modal
+    function showForgotPassword() {
+      const email = prompt('Nhập email để khôi phục mật khẩu:');
+      if (email) {
+        alert('Liên kết khôi phục mật khẩu đã được gửi đến ' + email);
+      }
+    }
+
+    // Social login handlers
+    document.querySelectorAll('.social-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const provider = this.classList.contains('facebook') ? 'Facebook' : 
+                        this.classList.contains('google') ? 'Google' : 'Twitter';
+        alert('Đăng nhập bằng ' + provider + ' đang được phát triển!');
+      });
+    });
+
+    // Login form submission to API
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData);
+      
+      try {
+          const response = await fetch('/login', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(data)
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+              window.location.href = result.redirect;
+          } else {
+              alert(result.message);
+          }
+      } catch (error) {
+          alert('Lỗi đăng nhập');
+      }
+    });
+  </script>
+</body>
+
+</html>

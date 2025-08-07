@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Broker Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>🔧 MQTT Broker Simulator</h2>
+        <p class="text-muted">Mô phỏng dữ liệu từ ESP32 sensors và Raspberry Pi camera</p>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📡 ESP32 Sensor Simulation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Vị trí sensor</label>
+                            <select class="form-control" id="sensor-spot">
+                                <option value="1">P1</option>
+                                <option value="2">P2</option>
+                                <option value="3">P3</option>
+                                <option value="4">P4</option>
+                                <option value="5">P5</option>
+                                <option value="6">P6</option>
+                                <option value="7">P7</option>
+                                <option value="8">P8</option>
+                                <option value="9">P9</option>
+                                <option value="10">P10</option>
+                                <option value="11">P11</option>
+                                <option value="12">P12</option>
+                                <option value="13">P13</option>
+                                <option value="14">P14</option>
+                                <option value="15">P15</option>
+                                <option value="16">P16</option>
+                                <option value="17">P17</option>
+                                <option value="18">P18</option>
+                                <option value="19">P19</option>
+                                <option value="20">P20</option>
+                                <option value="21">P21</option>
+                                <option value="22">P22</option>
+                                <option value="23">P23</option>
+                                <option value="24">P24</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-control" id="sensor-status">
+                                <option value="true">Có xe</option>
+                                <option value="false">Không có xe</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="sendSensorData()">
+                            Gửi dữ liệu sensor
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📷 Camera License Plate Simulation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Vị trí</label>
+                            <select class="form-control" id="camera-spot">
+                                <option value="1">P1</option>
+                                <option value="2">P2</option>
+                                <option value="3">P3</option>
+                                <option value="4">P4</option>
+                                <option value="5">P5</option>
+                                <option value="6">P6</option>
+                                <option value="7">P7</option>
+                                <option value="8">P8</option>
+                                <option value="9">P9</option>
+                                <option value="10">P10</option>
+                                <option value="11">P11</option>
+                                <option value="12">P12</option>
+                                <option value="13">P13</option>
+                                <option value="14">P14</option>
+                                <option value="15">P15</option>
+                                <option value="16">P16</option>
+                                <option value="17">P17</option>
+                                <option value="18">P18</option>
+                                <option value="19">P19</option>
+                                <option value="20">P20</option>
+                                <option value="21">P21</option>
+                                <option value="22">P22</option>
+                                <option value="23">P23</option>
+                                <option value="24">P24</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Biển số xe</label>
+                            <input type="text" class="form-control" id="license-plate" 
+                                   placeholder="VD: 29A-1234" value="29A-1234">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Độ tin cậy (%)</label>
+                            <input type="number" class="form-control" id="confidence" 
+                                   min="0" max="100" value="95">
+                        </div>
+                        <button class="btn btn-success" onclick="sendLicensePlateData()">
+                            Gửi nhận dạng biển số
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📋 MQTT Messages Log</h5>
+                        <button class="btn btn-sm btn-outline-secondary float-end" onclick="clearLog()">
+                            Clear Log
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="mqtt-log" style="height: 300px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                            <small class="text-muted">Sẽ hiển thị các message MQTT được gửi...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🚀 Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-outline-primary me-2" onclick="simulateCarEntering()">
+                            Xe vào bãi
+                        </button>
+                        <button class="btn btn-outline-danger me-2" onclick="simulateCarLeaving()">
+                            Xe rời bãi
+                        </button>
+                        <button class="btn btn-outline-warning me-2" onclick="simulateWrongLicense()">
+                            Biển số sai
+                        </button>
+                        <button class="btn btn-outline-info" onclick="simulateRandomActivity()">
+                            Hoạt động ngẫu nhiên
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mqttClient = null;
+        
+        // Connect to MQTT broker
+        function connectMQTT() {
+            try {
+                // Connect to local MQTT broker
+                mqttClient = mqtt.connect('ws://localhost:9001', {
+                    clientId: `mqtt_simulator_${Math.random().toString(16).substr(2, 8)}`
+                });
+
+                mqttClient.on('connect', function () {
+                    logMessage('✅ Connected to MQTT broker', 'success');
+                });
+
+                mqttClient.on('error', function (error) {
+                    logMessage('❌ MQTT connection error: ' + error, 'error');
+                });
+
+            } catch (error) {
+                logMessage('❌ Failed to connect to MQTT broker: ' + error, 'error');
+            }
+        }
+
+        // Send sensor data
+        function sendSensorData() {
+            if (!mqttClient || !mqttClient.connected) {
+                alert('MQTT not connected!');
+                return;
+            }
+            
+            const spotId = document.getElementById('sensor-spot').value;
+            const occupied = document.getElementById('sensor-status').value === 'true';
+            
+            const data = {
+                spot_id: parseInt(spotId),
+                occupied: occupied,
+                timestamp: new Date().toISOString(),
+                sensor_type: 'ultrasonic',
+                distance: occupied ? 15 : 200 // cm
+            };
+            
+            const topic = `parking/sensors/${spotId}`;
+            mqttClient.publish(topic, JSON.stringify(data));
+            
+            logMessage(`📡 Sensor P${spotId}: ${occupied ? 'Có xe' : 'Không có xe'}`, 'sensor');
+        }
+
+        // Send license plate recognition data
+        function sendLicensePlateData() {
+            if (!mqttClient || !mqttClient.connected) {
+                alert('MQTT not connected!');
+                return;
+            }
+            
+            const spotId = document.getElementById('camera-spot').value;
+            const licensePlate = document.getElementById('license-plate').value;
+            const confidence = document.getElementById('confidence').value;
+            
+            const data = {
+                license_plate: licensePlate,
+                spot_id: parseInt(spotId),
+                confidence: parseFloat(confidence),
+                timestamp: new Date().toISOString(),
+                camera_id: 'cam_01'
+            };
+            
+            mqttClient.publish('parking/camera/license_plate', JSON.stringify(data));
+            
+            logMessage(`📷 Camera P${spotId}: ${licensePlate} (${confidence}%)`, 'camera');
+        }
+
+        // Simulate car entering
+        function simulateCarEntering() {
+            const spotId = Math.floor(Math.random() * 24) + 1;
+            
+            // First send sensor data
+            setTimeout(() => {
+                const sensorData = {
+                    spot_id: spotId,
+                    occupied: true,
+                    timestamp: new Date().toISOString(),
+                    sensor_type: 'ultrasonic',
+                    distance: 15
+                };
+                mqttClient.publish(`parking/sensors/${spotId}`, JSON.stringify(sensorData));
+                logMessage(`📡 Xe vào P${spotId} - Sensor detect`, 'sensor');
+            }, 500);
+            
+            // Then send license plate recognition
+            setTimeout(() => {
+                const licenses = ['29A-1234', '30B-5678', '31C-9012', '32D-3456', '99X-1111', '88Y-2222'];
+                const licensePlate = licenses[Math.floor(Math.random() * licenses.length)];
+                
+                const cameraData = {
+                    license_plate: licensePlate,
+                    spot_id: spotId,
+                    confidence: 95,
+                    timestamp: new Date().toISOString(),
+                    camera_id: 'cam_01'
+                };
+                mqttClient.publish('parking/camera/license_plate', JSON.stringify(cameraData));
+                logMessage(`📷 Nhận dạng biển số: ${licensePlate}`, 'camera');
+            }, 2000);
+        }
+
+        // Simulate car leaving
+        function simulateCarLeaving() {
+            const spotId = Math.floor(Math.random() * 24) + 1;
+            
+            const sensorData = {
+                spot_id: spotId,
+                occupied: false,
+                timestamp: new Date().toISOString(),
+                sensor_type: 'ultrasonic',
+                distance: 200
+            };
+            mqttClient.publish(`parking/sensors/${spotId}`, JSON.stringify(sensorData));
+            logMessage(`📡 Xe rời P${spotId}`, 'sensor');
+        }
+
+        // Simulate wrong license plate
+        function simulateWrongLicense() {
+            const spotId = Math.floor(Math.random() * 24) + 1;
+            
+            // Send sensor data first
+            const sensorData = {
+                spot_id: spotId,
+                occupied: true,
+                timestamp: new Date().toISOString(),
+                sensor_type: 'ultrasonic',
+                distance: 15
+            };
+            mqttClient.publish(`parking/sensors/${spotId}`, JSON.stringify(sensorData));
+            
+            // Send wrong license plate
+            setTimeout(() => {
+                const wrongLicenses = ['99X-9999', '00Y-0000', '88Z-8888'];
+                const licensePlate = wrongLicenses[Math.floor(Math.random() * wrongLicenses.length)];
+                
+                const cameraData = {
+                    license_plate: licensePlate,
+                    spot_id: spotId,
+                    confidence: 85,
+                    timestamp: new Date().toISOString(),
+                    camera_id: 'cam_01'
+                };
+                mqttClient.publish('parking/camera/license_plate', JSON.stringify(cameraData));
+                logMessage(`⚠️ Biển số sai P${spotId}: ${licensePlate}`, 'warning');
+            }, 1500);
+        }
+
+        // Simulate random activity
+        function simulateRandomActivity() {
+            const actions = [simulateCarEntering, simulateCarLeaving, simulateWrongLicense];
+            const randomAction = actions[Math.floor(Math.random() * actions.length)];
+            randomAction();
+        }
+
+        // Log message
+        function logMessage(message, type = 'info') {
+            const log = document.getElementById('mqtt-log');
+            const time = new Date().toLocaleTimeString('vi-VN');
+            const colors = {
+                'success': 'text-success',
+                'error': 'text-danger',
+                'warning': 'text-warning',
+                'sensor': 'text-primary',
+                'camera': 'text-info'
+            };
+            
+            const entry = document.createElement('div');
+            entry.className = `mb-1 ${colors[type] || 'text-dark'}`;
+            entry.innerHTML = `<small>[${time}]</small> ${message}`;
+            
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Clear log
+        function clearLog() {
+            document.getElementById('mqtt-log').innerHTML = 
+                '<small class="text-muted">Sẽ hiển thị các message MQTT được gửi...</small>';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            connectMQTT();
+            
+            // Auto-generate random activity every 10 seconds
+            setInterval(() => {
+                if (Math.random() < 0.3) { // 30% chance
+                    simulateRandomActivity();
+                }
+            }, 10000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,667 @@
+/* Parking Layout Like Diagram */
+
+/* Main parking container */
+.parking-map {
+    background: #4a5568;
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    min-height: 600px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* VIP Area Label */
+.vip-label {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f6ad55;
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 10;
+}
+
+/* VIP Parking Area */
+.vip-area {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 50px 20px 20px 20px;
+}
+
+/* Main Road */
+.main-road {
+    width: 80px;
+    height: 300px;
+    background: #718096;
+    margin: 20px auto;
+    position: relative;
+    border-radius: 5px;
+}
+
+/* Road markings */
+.main-road::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 80%;
+    background: repeating-linear-gradient(
+        to bottom,
+        #ffd700 0px,
+        #ffd700 20px,
+        transparent 20px,
+        transparent 30px
+    );
+}
+
+/* Cars on road */
+.road-car {
+    position: absolute;
+    width: 30px;
+    height: 50px;
+    background: #2d3748;
+    border-radius: 8px 8px 4px 4px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.road-car:nth-child(2) {
+    top: 80px;
+}
+
+.road-car:nth-child(3) {
+    top: 180px;
+}
+
+/* Entrance Gate */
+.entrance-gate {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f6ad55;
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Regular parking area - hidden for now */
+.parking-area {
+    display: none;
+}
+
+/* VIP Parking Spots */
+.vip-spot {
+    width: 120px;
+    height: 120px;
+    background: #48bb78;
+    border: 3px solid #fff;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.vip-spot:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+/* VIP Spot Labels */
+.vip-spot .spot-label {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d3748;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.vip-spot .spot-status {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 3px 8px;
+    border-radius: 10px;
+}
+
+/* VIP Spot States */
+.vip-spot.empty {
+    background: #48bb78;
+}
+
+.vip-spot.occupied {
+    background: #e53e3e;
+}
+
+.vip-spot.reserved {
+    background: #ed8936;
+    animation: vipPulse 2s infinite;
+}
+
+.vip-spot.selected {
+    background: #3182ce;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(49, 130, 206, 0.4);
+}
+
+@keyframes vipPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Car in VIP spot */
+.vip-car {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 40px;
+    background: #2d3748;
+    border-radius: 6px;
+    display: none;
+}
+
+.vip-spot.occupied .vip-car,
+.vip-spot.reserved .vip-car {
+    display: block;
+}
+
+/* Hide all the old modern styles */
+.parking-spot,
+.car,
+.spot-number,
+.license-plate,
+.entrance {
+    display: none;
+}
+
+/* Spot hover effect */
+.parking-spot:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+        0 15px 30px rgba(0,0,0,0.4),
+        0 0 20px rgba(255,255,255,0.2);
+}
+
+/* Spot number styling */
+.spot-number {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: #fff;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+    z-index: 10;
+}
+
+/* Car representation */
+.car {
+    width: 80px;
+    height: 140px;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 12px 12px 6px 6px;
+    box-shadow: 
+        0 8px 16px rgba(0,0,0,0.3),
+        inset 0 2px 4px rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+}
+
+/* Car windows */
+.car::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 10px;
+    right: 10px;
+    height: 40px;
+    background: linear-gradient(135deg, 
+        rgba(135,206,235,0.8), 
+        rgba(70,130,180,0.9));
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Car wheels */
+.car::after {
+    content: '';
+    position: absolute;
+    bottom: 15px;
+    left: 8px;
+    width: 10px;
+    height: 10px;
+    background: #2c2c2c;
+    border-radius: 50%;
+    box-shadow: 
+        64px 0 0 #2c2c2c,
+        0 -120px 0 #2c2c2c,
+        64px -120px 0 #2c2c2c;
+}
+
+/* Empty spot */
+.parking-spot.empty {
+    background: 
+        radial-gradient(circle at center, 
+            rgba(40,167,69,0.1) 0%, 
+            rgba(40,167,69,0.05) 100%),
+        linear-gradient(135deg, 
+            rgba(255,255,255,0.1) 0%, 
+            rgba(255,255,255,0.05) 100%);
+    border-color: #28a745;
+}
+
+.parking-spot.empty::after {
+    content: '✓ TRỐNG';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #28a745;
+    font-weight: bold;
+    font-size: 18px;
+    background: rgba(40,167,69,0.1);
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 2px solid #28a745;
+    text-align: center;
+    backdrop-filter: blur(5px);
+}
+
+/* Occupied spot */
+.parking-spot.occupied .car {
+    background: linear-gradient(135deg, 
+        #007bff 0%, 
+        #0056b3 50%, 
+        #004085 100%);
+    display: block;
+}
+
+.parking-spot.occupied {
+    border-color: #007bff;
+    background: 
+        radial-gradient(circle at center, 
+            rgba(0,123,255,0.1) 0%, 
+            rgba(0,123,255,0.05) 100%);
+}
+
+/* Reserved spot */
+.parking-spot.reserved .car {
+    background: linear-gradient(135deg, 
+        #fd7e14 0%, 
+        #e55a00 50%, 
+        #c44500 100%);
+    display: block;
+    animation: reservedPulse 2s infinite;
+}
+
+.parking-spot.reserved {
+    border-color: #fd7e14;
+    background: 
+        radial-gradient(circle at center, 
+            rgba(253,126,20,0.1) 0%, 
+            rgba(253,126,20,0.05) 100%);
+}
+
+/* Processing spot */
+.parking-spot.processing .car {
+    background: linear-gradient(135deg, 
+        #6f42c1 0%, 
+        #5a2d8a 50%, 
+        #452069 100%);
+    display: block;
+    animation: processingPulse 1.5s infinite;
+}
+
+.parking-spot.processing {
+    border-color: #6f42c1;
+    background: 
+        radial-gradient(circle at center, 
+            rgba(111,66,193,0.1) 0%, 
+            rgba(111,66,193,0.05) 100%);
+}
+
+/* License plate */
+.license-plate {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #000;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    border: 2px solid #333;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 5;
+}
+
+/* Selected spot */
+.parking-spot.selected {
+    transform: translateY(-8px);
+    box-shadow: 
+        0 20px 40px rgba(0,123,255,0.4),
+        0 0 30px rgba(0,123,255,0.6);
+    border-color: #007bff;
+    border-width: 4px;
+}
+
+.parking-spot.selected .spot-number {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    transform: translateX(-50%) scale(1.1);
+}
+
+/* Entrance gate */
+.entrance {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 
+        0 8px 16px rgba(40,167,69,0.3),
+        inset 0 2px 4px rgba(255,255,255,0.2);
+    border: 3px solid rgba(255,255,255,0.3);
+}
+
+.entrance::before {
+    content: '🚗 ENTRANCE 🚗';
+    display: block;
+    text-align: center;
+}
+
+/* Animations */
+@keyframes reservedPulse {
+    0%, 100% { 
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
+    50% { 
+        opacity: 0.8;
+        transform: translateX(-50%) scale(0.98);
+    }
+}
+
+@keyframes processingPulse {
+    0%, 100% { 
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+        box-shadow: 0 8px 16px rgba(111,66,193,0.3);
+    }
+    50% { 
+        opacity: 0.7;
+        transform: translateX(-50%) scale(0.95);
+        box-shadow: 0 12px 24px rgba(111,66,193,0.5);
+    }
+}
+
+/* Control panel styling */
+.control-panel {
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+    border: 2px solid #007bff;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 
+        0 15px 30px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.control-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        #007bff, 
+        transparent);
+    animation: scanLine 3s infinite;
+}
+
+@keyframes scanLine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.control-panel h4 {
+    color: #007bff;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.control-panel .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.control-panel .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255,255,255,0.2), 
+        transparent);
+    transition: left 0.5s;
+}
+
+.control-panel .btn:hover::before {
+    left: 100%;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .parking-area {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 992px) {
+    .parking-area {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .parking-spot {
+        width: 100px;
+        height: 180px;
+    }
+    
+    .car {
+        width: 70px;
+        height: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    .parking-area {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 20px 10px;
+    }
+    
+    .parking-spot {
+        width: 120px;
+        height: 80px;
+    }
+    
+    .car {
+        width: 100px;
+        height: 50px;
+        border-radius: 6px;
+        transform: translateX(-50%) rotate(90deg);
+    }
+    
+    .car::before {
+        top: 15px;
+        left: 5px;
+        right: 5px;
+        height: 20px;
+    }
+    
+    .car::after {
+        bottom: 5px;
+        left: 8px;
+        width: 6px;
+        height: 6px;
+        box-shadow: 
+            84px 0 0 #2c2c2c,
+            0 -38px 0 #2c2c2c,
+            84px -38px 0 #2c2c2c;
+    }
+    
+    .license-plate {
+        bottom: 40px;
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 576px) {
+    .parking-area {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .parking-map {
+        padding: 15px;
+        min-height: 400px;
+    }
+    
+    .control-panel {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+}
+
+/* Toast notifications styling */
+.toast {
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+}
+
+.toast-success .toast-header {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+}
+
+.toast-error .toast-header {
+    background: linear-gradient(135deg, #f8d7da, #f1aeb5);
+    color: #721c24;
+}
+
+.toast-warning .toast-header {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+}
+
+/* Legend styling */
+.map-legend {
+    padding: 15px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.legend-color {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 8px;
+    border: 2px solid #fff;
+}
+
+.legend-color.empty {
+    background: #48bb78;
+}
+
+.legend-color.occupied {
+    background: #e53e3e;
+}
+
+.legend-color.reserved {
+    background: #ed8936;
+}
+
+.legend-color.processing {
+    background: #6f42c1;
+}
+
+/* Statistics styling */
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+}

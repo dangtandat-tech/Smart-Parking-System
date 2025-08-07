@@ -1,0 +1,5 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+paho-mqtt==1.6.1
+python-socketio==5.9.0
