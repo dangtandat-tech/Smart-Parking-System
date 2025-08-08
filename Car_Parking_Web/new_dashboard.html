@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bãi Đỗ Xe Thông Minh - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- MQTT Client -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        /* Main Layout */
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header .container {
+            max-width: 1200px;
+        }
+
+        .header .row {
+            align-items: center;
+            min-height: 60px;
+        }
+
+        /* Logo/Title area */
+        .header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .header h3 i {
+            margin-right: 10px;
+            color: #ffd700;
+        }
+
+        /* User info container */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-left: auto;
+            width: 100%;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .user-avatar i {
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        /* User details */
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 120px;
+            text-align: left;
+        }
+
+        .user-details .fw-bold {
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+            white-space: nowrap;
+        }
+
+        .user-details small {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            white-space: nowrap;
+        }
+
+        /* Dropdown button */
+        .dropdown .btn {
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown .btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-1px);
+        }
+
+        /* Parking Lot Design */
+        .parking-lot-container {
+            background: #2d3748;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        /* Entrance and Exit Gates */
+        .entrance-gate, .exit-gate {
+            position: absolute;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .entrance-gate {
+            bottom: -20px;
+            left: 20%;
+        }
+
+        .exit-gate {
+            bottom: -20px;
+            right: 20%;
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Parking Grid */
+        .parking-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            padding: 30px 25px;
+            position: relative;
+            background: #2d3748;
+            border-radius: 15px;
+        }
+
+        /* White parking lines - positioned to match the spots exactly */
+        .parking-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                /* Vertical lines between columns */
+                repeating-linear-gradient(
+                    to right,
+                    transparent 0px,
+                    transparent calc(20% - 2px),
+                    #fff calc(20% - 2px),
+                    #fff calc(20% + 2px),
+                    transparent calc(20% + 2px),
+                    transparent 20%
+                ),
+                /* Horizontal lines between rows */
+                
+                linear-gradient(to right, #fff 0px, #fff 4px, transparent 4px),
+                linear-gradient(to right, transparent calc(100% - 4px), #fff calc(100% - 4px)),
+                linear-gradient(to bottom, #fff 0px, #fff 4px, transparent 4px),
+                linear-gradient(to bottom, transparent calc(100% - 4px), #fff calc(100% - 4px));
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Individual Parking Spot */
+        .parking-spot {
+            width: 100%;
+            height: 160px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            z-index: 1;
+            margin: 5px;
+        }
+
+        /* Spot States */
+        .parking-spot.empty {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-color: #20c997;
+        }
+
+        .parking-spot.reserved {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            border-color: #fd7e14;
+            animation: pulse 2s infinite;
+        }
+
+        .parking-spot.occupied {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            border-color: #c82333;
+        }
+
+        .parking-spot.processing {
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+            border-color: #e83e8c;
+            animation: processing 1.5s infinite;
+        }
+
+        .parking-spot.my-reservation {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border-color: #0056b3;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Car Representation */
+        .car-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .parking-spot.empty .car-icon {
+            display: none;
+        }
+
+        /* Spot Information */
+        .spot-number {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .spot-status {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .license-plate {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+            border: 1px solid #333;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes processing {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(0.98);
+            }
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        /* Statistics Cards */
+        .stat-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* MQTT Status */
+        .mqtt-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: blink 1s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+            animation: none;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .parking-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                padding: 25px 20px;
+            }
+            
+            .parking-grid::before {
+                background-image: 
+                    /* Vertical lines for 3 columns */
+                    repeating-linear-gradient(
+                        to right,
+                        transparent 0px,
+                        transparent calc(33.333% - 2px),
+                        #fff calc(33.333% - 2px),
+                        #fff calc(33.333% + 2px),
+                        transparent calc(33.333% + 2px),
+                        transparent 33.333%
+                    ),
+                    /* Horizontal lines for 2 rows */
+                    repeating-linear-gradient(
+                        to bottom,
+                        transparent 0px,
+                        transparent calc(50% - 2px),
+                        #fff calc(50% - 2px),
+                        #fff calc(50% + 2px),
+                        transparent calc(50% + 2px),
+                        transparent 50%
+                    ),
+                    /* Outer border */
+                    linear-gradient(to right, #fff 0px, #fff 4px, transparent 4px),
+                    linear-gradient(to right, transparent calc(100% - 4px), #fff calc(100% - 4px)),
+                    linear-gradient(to bottom, #fff 0px, #fff 4px, transparent 4px),
+                    linear-gradient(to bottom, transparent calc(100% - 4px), #fff calc(100% - 4px));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h3 {
+                 margin: 0;
+                 font-weight: 600;
+                 font-size: 1.5rem;          
+            }
+            
+            .user-info {
+                gap: 10px;
+                justify-content: center; /* Center trên mobile */
+                margin-left: 0;
+            }
+            
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .user-details .fw-bold {
+                font-size: 0.85rem;
+            }
+            
+            .user-details small {
+                font-size: 0.75rem;
+            }
+            
+            /* Stack vertically on small screens */
+            .header .row {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            /* Điều chỉnh cho mobile */
+            .header .col-md-8,
+            .header .col-md-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .header {
+                padding: 0.75rem 0;
+            }
+            
+            .header h3 {
+                font-size: 1.1rem;
+            }
+            .header h3 i {
+                margin-right: 10px;
+                color: #ffd700;
+            }
+            /* Hide email on very small screens */
+            .user-details small {
+                display: none;
+            }
+        }
+
+        /* Notification Toast */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #fff;
+        }
+
+        /* Checkin List Area */
+        .checkin-list-area {
+            position: absolute;
+            bottom: 15px; /* Gần sát với cổng vào hơn */
+            left: 20%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 15px;
+            min-width: 180px;
+            max-width: 220px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .checkin-list-area h6 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .checkin-list-area h6 i {
+            color: #28a745;
+            margin-right: 5px;
+        }
+
+        #checkin-plates {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .no-checkin {
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .checkin-plate-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            text-align: center;
+            animation: plateCheckin 0.5s ease-in;
+        }
+
+        .checkin-plate-item.new {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            animation: plateCheckin 0.8s ease-in;
+        }
+
+        .checkin-plate-item .plate-number {
+            font-weight: bold;
+            color: #000;
+            font-size: 14px;
+        }
+
+        /* Checkin List Area Out */
+        .checkin-list-area-out {
+            position: absolute;
+            bottom: 15px; /* Tương tự như checkin-list-area */
+            right: 20%; /* Đối xứng với left: 20% của cổng vào */
+            transform: translateX(50%);
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 15px;
+            min-width: 180px;
+            max-width: 220px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .checkin-list-area-out h6 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .checkin-list-area-out h6 i {
+            color: #dc3545; /* Màu đỏ cho cổng ra */
+            margin-right: 5px;
+        }
+
+        #checkin-plates-out {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .no-checkout {
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .checkout-plate-item {
+            background: #fff2f2; /* Nền hơi đỏ cho checkout */
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            text-align: center;
+            animation: plateCheckout 0.5s ease-in;
+        }
+
+        .checkout-plate-item.new {
+            background: #f8d7da; /* Nền đỏ nhạt cho item mới */
+            border-color: #f5c6cb;
+            animation: plateCheckout 0.8s ease-in;
+        }
+
+        .checkout-plate-item .plate-number {
+            font-weight: bold;
+            color: #000;
+            font-size: 14px;
+        }
+
+        @keyframes plateCheckin {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes plateCheckout {
+            0% {
+                opacity: 0;
+                transform: translateY(10px); /* Slide từ dưới lên cho checkout */
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3><i class="fas fa-car"></i> FLAWLESS - Smart Car Parking</h3>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-details">
+                            <div class="fw-bold" id="username">Người dùng</div>
+                            <small id="user-email">user@email.com</small>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="showProfile()">Thông tin cá nhân</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showHistory()">Lịch sử đặt chỗ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="login.html">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Main Parking Area -->
+            <div class="col-lg-9">
+                <!-- MQTT Connection Status -->
+                <div class="control-panel">
+                    <div class="mqtt-status">
+                        <div class="status-dot" id="mqtt-status"></div>
+                        <span id="mqtt-text">Đang kết nối MQTT...</span>
+                        <button class="btn btn-sm btn-outline-primary ms-auto" onclick="connectMQTT()">
+                            <i class="fas fa-sync-alt"></i> Kết nối lại
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>Trạng thái bãi đỗ xe</h5>
+                            <p class="text-muted mb-0">Cập nhật real-time từ sensors và camera</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-muted">Cập nhật lần cuối: <span id="last-update">--:--</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parking Lot -->
+                <div class="parking-lot-container">
+                    <div class="parking-grid" id="parking-grid">
+                        <!-- Parking spots will be generated here -->
+                    </div>
+                    
+                    <!-- Gates -->
+                    <div class="entrance-gate">
+                        <i class="fas fa-arrow-up"></i> CỔNG VÀO
+                    </div>
+                    
+                    <!-- License Plate List Area -->
+                    <div class="checkin-list-area">
+                        <h6><i class="fas fa-list"></i> Biển số đã vào</h6>
+                        <div id="checkin-plates">
+                            <div class="no-checkin">Chưa có xe vào</div>
+                        </div>
+                    </div>
+                    
+                    <div class="exit-gate">
+                        <i class="fas fa-arrow-down"></i> CỔNG RA
+                    </div>
+                    
+                    <!-- License Plate List Area -->
+                    <div class="checkin-list-area-out">
+                        <h6><i class="fas fa-list"></i> Biển số đi ra</h6>
+                        <div id="checkin-plates-out">
+                            <div class="no-checkout">Chưa có xe đi ra</div>
+                        </div>
+                    </div>
+                    <!-- Legend -->
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #28a745;"></div>
+                            <span>Trống</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #dc3545;"></div>
+                            <span>Có xe</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <div class="col-lg-3">
+                <!-- Statistics -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <div class="stat-number text-success" id="empty-count">0</div>
+                            <div class="stat-label">Chỗ trống</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <div class="stat-number text-danger" id="occupied-count">0</div>
+                            <div class="stat-label">Đã đỗ</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <div class="stat-number text-warning" id="reserved-count">0</div>
+                            <div class="stat-label">Đã đặt</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <div class="stat-number text-info" id="total-count">5</div>
+                            <div class="stat-label">Tổng chỗ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="control-panel">
+                    <h6><i class="fas fa-history"></i> Hoạt động gần đây</h6>
+                    <div id="activity-log">
+                        <small class="text-muted">Chưa có hoạt động nào</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container">
+        <div id="notification-toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Thông báo</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let mqttClient = null;
+        let socket = null;
+        let parkingSpots = [];
+        let checkinPlates = []; // Array để lưu trữ biển số đã check-in
+        let checkoutPlates = []; // Array để lưu trữ biển số đã check-out
+        let currentUser = {
+            id: 1,
+            name: 'Nguyễn Văn A',
+            email: 'user@email.com'
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeParkingLot();
+            connectToServer();
+            updateUserInfo();
+            setInterval(updateLastUpdateTime, 1000);
+        });
+
+        // Initialize parking lot with 5 spots
+        function initializeParkingLot() {
+            parkingSpots = Array.from({length: 5}, (_, i) => ({
+                id: 5 - i,
+                status: 'empty', // chỉ empty hoặc occupied
+                lastUpdate: new Date()
+            }));
+
+            renderParkingGrid();
+            updateStatistics();
+            loadCheckinHistory();
+            loadCheckoutHistory(); // Thêm dòng này
+        }
+
+        // Render parking grid
+        function renderParkingGrid() {
+            const grid = document.getElementById('parking-grid');
+            grid.innerHTML = '';
+
+            parkingSpots.forEach(spot => {
+                const spotElement = document.createElement('div');
+                spotElement.className = `parking-spot ${spot.status}`;
+                if (spot.reservedBy === currentUser.id) {
+                    spotElement.classList.add('my-reservation');
+                }
+                
+                // Chỉ hiển thị số vị trí và trạng thái, không hiển thị biển số
+                spotElement.innerHTML = `
+                    <div class="spot-number">P${spot.id}</div>
+                    <div class="car-icon">🚗</div>
+                    <div class="spot-status">${getStatusText(spot.status)}</div>
+                `;
+
+                spotElement.addEventListener('click', () => selectSpot(spot.id));
+                grid.appendChild(spotElement);
+            });
+        }
+
+        // Get status text in Vietnamese
+        function getStatusText(status) {
+            const statusMap = {
+                'empty': 'Trống',
+                'occupied': 'Có xe'
+            };
+            return statusMap[status] || 'Không rõ';
+        }
+
+        // Add checkin plate to display (from database)
+        function addCheckinPlate(plateData) {
+            const { license_plate, checkin_time } = plateData;
+            
+            // Thêm vào array
+            const plateInfo = {
+                plate: license_plate,
+                time: new Date(checkin_time)
+            };
+            
+            checkinPlates.unshift(plateInfo); // Thêm vào đầu array
+            
+            // Giữ tối đa 15 biển số gần nhất
+            if (checkinPlates.length > 15) {
+                checkinPlates = checkinPlates.slice(0, 15);
+            }
+            
+            // Cập nhật hiển thị
+            updateCheckinPlatesDisplay();
+            
+            // Log activity
+            addActivity(`Xe vào bãi: ${license_plate}`);
+        }
+
+        // Update checkin plates display
+        function updateCheckinPlatesDisplay() {
+            const container = document.getElementById('checkin-plates');
+            
+            if (checkinPlates.length === 0) {
+                container.innerHTML = '<div class="no-checkin">Chưa có xe vào</div>';
+                return;
+            }
+            
+            container.innerHTML = checkinPlates.map((plate, index) => `
+                <div class="checkin-plate-item ${index === 0 ? 'new' : ''}">
+                    <div class="plate-number">${plate.plate}</div>
+                </div>
+            `).join('');
+            
+            // Remove 'new' class after animation
+            setTimeout(() => {
+                const newItems = container.querySelectorAll('.new');
+                newItems.forEach(item => item.classList.remove('new'));
+            }, 800);
+        }
+
+        // Add checkout plate to display (from database)
+        function addCheckoutPlate(plateData) {
+            const { license_plate, checkout_time } = plateData;
+            
+            // Thêm vào array
+            const plateInfo = {
+                plate: license_plate,
+                time: new Date(checkout_time)
+            };
+            
+            checkoutPlates.unshift(plateInfo); // Thêm vào đầu array
+            
+            // Giữ tối đa 15 biển số gần nhất
+            if (checkoutPlates.length > 15) {
+                checkoutPlates = checkoutPlates.slice(0, 15);
+            }
+            
+            // Cập nhật hiển thị
+            updateCheckoutPlatesDisplay();
+            
+            // Log activity
+            addActivity(`Xe rời bãi: ${license_plate}`);
+            
+            // Hiển thị toast
+            showToast('Xe rời bãi', `${license_plate} đã rời khỏi bãi đỗ xe`, 'warning');
+        }
+
+        // Update checkout plates display
+        function updateCheckoutPlatesDisplay() {
+            const container = document.getElementById('checkin-plates-out');
+            
+            if (checkoutPlates.length === 0) {
+                container.innerHTML = '<div class="no-checkout">Chưa có xe đi ra</div>';
+                return;
+            }
+            
+            container.innerHTML = checkoutPlates.map((plate, index) => `
+                <div class="checkout-plate-item ${index === 0 ? 'new' : ''}">
+                    <div class="plate-number">${plate.plate}</div>
+                </div>
+            `).join('');
+            
+            // Remove 'new' class after animation
+            setTimeout(() => {
+                const newItems = container.querySelectorAll('.new');
+                newItems.forEach(item => item.classList.remove('new'));
+            }, 800);
+        }
+
+        // Load checkin history from server
+        function loadCheckinHistory() {
+            const serverIP = 'http://172.20.10.3:5000'; // Thay bằng IP thực tế
+
+            fetch(`${serverIP}/api/checkins`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        checkinPlates = data.checkins.map(checkin => ({
+                            plate: checkin.license_plate,
+                            time: new Date(checkin.checkin_time)
+                        }));
+                        updateCheckinPlatesDisplay();
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi load checkin history:', error);
+                });
+        }
+
+        // Load checkout history from server
+        function loadCheckoutHistory() {
+            const serverIP = 'http://172.20.10.3:5000';
+
+            fetch(`${serverIP}/api/checkouts`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        checkoutPlates = data.checkouts.map(checkout => ({
+                            plate: checkout.license_plate,
+                            time: new Date(checkout.checkout_time)
+                        }));
+                        updateCheckoutPlatesDisplay();
+                        console.log('✅ Đã load lịch sử checkout:', checkoutPlates.length, 'bản ghi');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Lỗi load checkout history:', error);
+                });
+        }
+
+        // Connect to MQTT broker
+        function connectMQTT() {
+            try {
+                // Replace with your MQTT broker URL
+                mqttClient = mqtt.connect('ws://localhost:9001', {
+                    clientId: `parking_user_${currentUser.id}_${Math.random().toString(16).substr(2, 8)}`
+                });
+
+                mqttClient.on('connect', function () {
+                    console.log('Connected to MQTT broker');
+                    updateMQTTStatus(true);
+                    
+                    // Subscribe to relevant topics
+                    mqttClient.subscribe('parking/sensors/+'); // Sensor data from ESP32
+                    mqttClient.subscribe('parking/camera/license_plate'); // License plate recognition
+                    mqttClient.subscribe('parking/status/+'); // Spot status updates
+                });
+
+                mqttClient.on('message', function (topic, message) {
+                    handleMQTTMessage(topic, message.toString());
+                });
+
+                mqttClient.on('error', function (error) {
+                    console.error('MQTT connection error:', error);
+                    updateMQTTStatus(false);
+                });
+
+                mqttClient.on('close', function () {
+                    console.log('MQTT connection closed');
+                    updateMQTTStatus(false);
+                });
+
+            } catch (error) {
+                console.error('MQTT connection failed:', error);
+                updateMQTTStatus(false);
+            }
+        }
+
+        // Connect to Flask server via Socket.IO
+        function connectToServer() {
+            try {
+                socket = io('http://172.20.10.3:5000');
+                
+                socket.on('connect', function() {
+                    console.log('✅ Kết nối tới Parking Server thành công');
+                    socket.emit('request_spots_update');
+                });
+
+                // Nhận danh sách cập nhật TẤT CẢ ô đỗ (khi mới kết nối)
+                socket.on('spots_update', function(data) {
+                    if (data && data.spots) {
+                        console.log('Nhận cập nhật toàn bộ bãi đỗ:', data.spots);
+                        data.spots.forEach(serverSpot => {
+                            const spotId = parseInt(serverSpot.spot_id.replace('P', ''));
+                            const localSpot = parkingSpots.find(s => s.id === spotId);
+                            if (localSpot) {
+                                // Cập nhật trạng thái dựa trên dữ liệu từ server
+                                if (serverSpot.status === 'occupied') {
+                                    localSpot.status = 'occupied';
+                                } else {
+                                    localSpot.status = 'empty';
+                                }
+                            }
+                        });
+                        renderParkingGrid();
+                        updateStatistics();
+                        addActivity('Đã đồng bộ hóa trạng thái bãi đỗ.');
+                    }
+                });
+                
+                socket.on('disconnect', function() {
+                    console.log('❌ Mất kết nối tới Parking Server');
+                    updateMQTTStatus(false);
+                });
+                
+                // Nhận trạng thái MQTT
+                socket.on('mqtt_status', function(data) {
+                    updateMQTTStatus(data.connected);
+                });
+                
+                // Nhận cập nhật trạng thái ô đỗ (sẽ sửa ở bước tiếp theo)
+                socket.on('spot_status_update', function(data) {
+                    handleSpotStatusUpdate(data);
+                });
+                
+                // Nhận phát hiện biển số đi vào
+                socket.on('license_plate_detected', function(data) {
+                    console.log('🚗 Xe vào bãi:', data);
+                    addCheckinPlate(data);
+                });
+
+                // Nhận phát hiện biển số đi ra (THÊM MỚI)
+                socket.on('license_plate_exit', function(data) {
+                    console.log('🚗 Xe rời bãi:', data);
+                    addCheckoutPlate(data);
+                });
+                
+            } catch (error) {
+                console.error('Lỗi kết nối server:', error);
+                updateMQTTStatus(false);
+            }
+        }
+
+        // Handle MQTT messages
+        function handleMQTTMessage(topic, message) {
+            console.log('Received:', topic, message);
+            
+            try {
+                const data = JSON.parse(message);
+                
+                if (topic.startsWith('parking/sensors/')) {
+                    // Sensor data from ESP32
+                    const spotId = parseInt(topic.split('/')[2]);
+                    handleSensorData(spotId, data);
+                    
+                } else if (topic === 'parking/camera/license_plate') {
+                    // License plate recognition from Raspberry Pi
+                    handleLicensePlateRecognition(data);
+                    
+                } else if (topic.startsWith('parking/status/')) {
+                    // Spot status updates
+                    const spotId = parseInt(topic.split('/')[2]);
+                    handleStatusUpdate(spotId, data);
+                }
+                
+            } catch (error) {
+                console.error('Error parsing MQTT message:', error);
+            }
+        }
+
+        // Handle sensor data from ESP32
+        function handleSensorData(spotId, data) {
+            const spot = parkingSpots.find(s => s.id === spotId);
+            if (spot) {
+                spot.lastUpdate = new Date();
+
+                // Update spot status based on sensor data
+                if (data.occupied && spot.status === 'empty') {
+                    spot.status = 'occupied';
+                    addActivity(`Xe vào vị trí P${spotId}`);
+                } else if (!data.occupied && spot.status === 'occupied') {
+                    spot.status = 'empty';
+                    addActivity(`Xe rời khỏi vị trí P${spotId}`);
+                }
+                
+                renderParkingGrid();
+                updateStatistics();
+            }
+        }
+
+        // Handle license plate recognition from Raspberry Pi
+        function handleLicensePlateRecognition(data) {
+            const { license_plate, timestamp } = data;
+            
+            // Thêm vào danh sách biển số đã check-in
+            addCheckinPlate({
+                license_plate,
+                checkin_time: timestamp || new Date().toISOString()
+            });
+        }
+
+        // Handle status updates
+        function handleStatusUpdate(spotId, data) {
+            const spot = parkingSpots.find(s => s.id === spotId);
+            if (spot) {
+                spot.status = data.status;
+                spot.lastUpdate = new Date();
+                
+                renderParkingGrid();
+                updateStatistics();
+            }
+        }
+
+        // Handle spot status update from MQTT
+        function handleSpotStatusUpdate(data) {
+            const { spot_id, status, timestamp } = data;
+            const spotId = parseInt(spot_id.replace('P', '')) || parseInt(spot_id);
+            const spot = parkingSpots.find(s => s.id === spotId);
+            
+            if (spot) {
+                spot.status = status === 'occupied' ? 'occupied' : 'empty';
+                spot.lastUpdate = new Date(timestamp);
+                
+                renderParkingGrid();
+                updateStatistics();
+                
+                addActivity(`Cập nhật P${spotId}: ${getStatusText(spot.status)}`);
+            }
+        }
+
+        // Update MQTT connection status
+        function updateMQTTStatus(connected) {
+            const statusDot = document.getElementById('mqtt-status');
+            const statusText = document.getElementById('mqtt-text');
+            
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Kết nối server thành công (MQTT active)';
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Mất kết nối server';
+            }
+        }
+
+        // Reconnect function
+        function connectMQTT() {
+            if (socket) {
+                socket.disconnect();
+            }
+            connectToServer();
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const empty = parkingSpots.filter(s => s.status === 'empty').length;
+            const occupied = parkingSpots.filter(s => s.status === 'occupied').length;
+            
+            document.getElementById('empty-count').textContent = empty;
+            document.getElementById('occupied-count').textContent = occupied;
+            document.getElementById('reserved-count').textContent = 0; // Không còn đặt chỗ
+            document.getElementById('total-count').textContent = parkingSpots.length;
+        }
+
+        // Utility functions
+        function showProfile() {
+            alert('Tính năng thông tin cá nhân đang phát triển');
+        }
+
+        function showHistory() {
+            alert('Tính năng lịch sử đặt chỗ đang phát triển');
+        }
+
+        // Update user info
+        function updateUserInfo() {
+            document.getElementById('username').textContent = currentUser.name;
+            document.getElementById('user-email').textContent = currentUser.email;
+        }
+
+        // Add activity log
+        function addActivity(message) {
+            const log = document.getElementById('activity-log');
+            const time = new Date().toLocaleTimeString('vi-VN');
+            const activity = document.createElement('div');
+            activity.className = 'mb-2';
+            activity.innerHTML = `<small class="text-muted">${time}</small><br><span>${message}</span>`;
+            
+            log.insertBefore(activity, log.firstChild);
+            
+            // Keep only last 5 activities
+            while (log.children.length > 5) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // Update last update time
+        function updateLastUpdateTime() {
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('vi-VN');
+        }
+
+        // Show toast notification
+        function showToast(title, message, type = 'info') {
+            const toast = document.getElementById('notification-toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            
+            // Remove existing type classes
+            toast.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-info');
+            
+            // Add type-specific class
+            switch(type) {
+                case 'success': toast.classList.add('bg-success', 'text-white'); break;
+                case 'error': toast.classList.add('bg-danger', 'text-white'); break;
+                case 'warning': toast.classList.add('bg-warning'); break;
+                default: toast.classList.add('bg-info', 'text-white');
+            }
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+      
+    </script>
+</body>
+</html>
